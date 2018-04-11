@@ -1,8 +1,6 @@
 # 실습을 위한 개발 환경 세팅
-* https://github.com/slipp/web-application-server 프로젝트를 자신의 계정으로 Fork한다. Github 우측 상단의 Fork 버튼을 클릭하면 자신의 계정으로 Fork된다.
-* Fork한 프로젝트를 eclipse 또는 터미널에서 clone 한다.
-* Fork한 프로젝트를 eclipse로 import한 후에 Maven 빌드 도구를 활용해 eclipse 프로젝트로 변환한다.(mvn eclipse:clean eclipse:eclipse)
-* 빌드가 성공하면 반드시 refresh(fn + f5)를 실행해야 한다.
+* IntelliJ IDEA
+* Maven
 
 # 웹 서버 시작 및 테스트
 * webserver.WebServer 는 사용자의 요청을 받아 RequestHandler에 작업을 위임하는 클래스이다.
@@ -15,7 +13,33 @@
 * 각 요구사항을 구현하는 것이 중요한 것이 아니라 구현 과정을 통해 학습한 내용을 인식하는 것이 배움에 중요하다. 
 
 ### 요구사항 1 - http://localhost:8080/index.html로 접속시 응답
-* 
+
+스트림혹은 파일은 각자의 Class가 Java에 존재한다. 여기서 각 각체를 읽어주는 Reader가 별도로 존재한다.
+각 리더는 버퍼를 사용하면 효율적으로 읽을 수 있는 것으로 보인다.
+따라서 InputStream이나 File의 각 Reader(InputStreamReader, FileReader)는 BufferReader를 사용 할 수 있다.
+
+        public class BufferedReader extends Reader {
+        ....
+        public BufferedReader(Reader in) {
+            this(in, defaultCharBufferSize);
+        }
+    
+        /** Checks to make sure that the stream has not been closed */
+        private void ensureOpen() throws IOException {
+            if (in == null)
+                throw new IOException("Stream closed");
+        } ....
+        
+ BufferReader는 Reader의 확장이며, InputStreamReader 또한 Reader의 확장이다.
+ FileReader는 InputStreamReader의 확장이다.
+ 
+     public class InputStreamReader extends Reader{... }
+     public class FileReader extends InputStreamReader {...}
+     
+* 참고
+* https://stackoverflow.com/a/35446009 [Read/convert an InputStream to a String]
+* http://jdm.kr/blog/3 [자바파일입출력]
+* https://www.mkyong.com/java/how-to-convert-file-into-an-array-of-bytes/ [NIO를 이용한 파일에서 바이트배열로의 변경]
 
 ### 요구사항 2 - get 방식으로 회원가입
 * 
