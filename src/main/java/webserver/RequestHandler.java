@@ -55,7 +55,9 @@ public class RequestHandler extends Thread {
                 }
                 User user = new User(map.get("userId"),map.get("password"),map.get("name"),map.get("email"));
                 log.info("추가된 유저 {}",user.toString());
-                uri = defaultPath+"/user/list.html"; //완료후 LIST 페이지로
+                uri = "/user/list.html"; //완료후 LIST 페이지로
+                response302Header(dos,uri);
+                responseBody(dos,new byte[0]);
             }
             /*회원가입요청끝*/
 
@@ -81,6 +83,16 @@ public class RequestHandler extends Thread {
             map.put(temp[0],temp[1]);
         }
         return map;
+    }
+
+    private void response302Header(DataOutputStream dos, String location) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
+            dos.writeBytes("LOCATION: " + location + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
     }
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
