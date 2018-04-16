@@ -15,6 +15,7 @@ public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
     private static String defaultPath = "./webapp";
     private Socket connection;
+    private static Map<String,User> users = new HashMap<String,User>(); //DB
 
     public RequestHandler(Socket connectionSocket) {
         this.connection = connectionSocket;
@@ -44,6 +45,7 @@ public class RequestHandler extends Thread {
             }
 
             ///////////////////////HTTP REQUEST 해석//////////////////////////////////////
+
             /*회원가입요청 /user/create */
             if(uri.split("\\?")[0].equals(defaultPath+"/user/create")){
                 Map<String,String> map = null;
@@ -55,11 +57,46 @@ public class RequestHandler extends Thread {
                 }
                 User user = new User(map.get("userId"),map.get("password"),map.get("name"),map.get("email"));
                 log.info("추가된 유저 {}",user.toString());
-                uri = "/user/list.html"; //완료후 LIST 페이지로
+                users.put(user.getUserId(),user);
+                uri = "/user/list.html"; //완료후 LIST 페이지로it노조
                 response302Header(dos,uri);
                 responseBody(dos,new byte[0]);
             }
             /*회원가입요청끝*/
+
+            /*로그인요청 /user/login */
+            if(uri.split("\\?")[0].equals(defaultPath+"/user/login")){
+                Map<String,String> map = null;
+                //get일 경우
+                if(method.equals("GET")){
+                    uri = "/user/login.html";
+                }else if(method.equals("POST")){
+                    map = getParam(httpBody);
+
+                    if(users.containsKey(map.get("userId"))){
+                        String userId = map.get("userId");
+                        String password = map.get("password");
+                        log.info("########1########{}",password);
+                        log.info("########2########{}",users.get(userId).getPassword());
+                        log.info("#########3########{}",users.get(userId).getPassword().equals(password));
+                        //Login ID와 pw가 같다면 성공
+                        if(users.get(userId).getPassword().equals(password)){
+                            //Login Success
+                            log.info("로그인 성공!");
+                        }else{
+                            log.info("비밀번호를 확인해주세요.");
+                        }
+                    }else{ //ID가 없을 때..
+                        log.info("존재하지 않는 ID 입니다. ID 입력을 확인해주세요.");
+                    }
+
+                }
+                uri = "/user/list.html"; //완료후 LIST 페이지로
+                response302Header(dos,uri);
+                responseBody(dos,new byte[0]);
+            }
+
+            /*로그인요청끝 /user/login */
 
             byte[] body = Files.readAllBytes(new File(uri).toPath()); //NIO를 활용한 File to byte[]body
             response200Header(dos, body.length);
@@ -80,7 +117,7 @@ public class RequestHandler extends Thread {
 
         for(String p:param.split("&")){
             String [] temp = p.split("=");
-            map.put(temp[0],temp[1]);
+            map.put(temp[0].trim(),temp[1].trim());
         }
         return map;
     }
@@ -99,6 +136,22 @@ public class RequestHandler extends Thread {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
             dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
+            dos.writeBytes("\r\n");
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+    private void response200Header(DataOutputStream dos, int lengthOfBodyContent, Map<String,String> cookies) {
+        try {
+            dos.writeBytes("HTTP/1.1 200 OK \r\n");
+            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
+            if(!cookies.isEmpty()){
+                String setCookie = "SET-Cookie: ";
+
+
+
+            }
             dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
             dos.writeBytes("\r\n");
         } catch (IOException e) {
