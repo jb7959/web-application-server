@@ -55,7 +55,33 @@
 * HTTP 302를 통한 redirect 방식으로 이동은 의도치 않은 data 재전송 및 조작을 방지 할 수 있음
 
 ### 요구사항 5 - cookie
-* 
+* cookie 삽입을 위해서는 HTTP Header에 "SET-Cookie: "CookieName" = "value(쿠키값)";의 방식으로 기입해주어야 함
+
+        private void response302Header(DataOutputStream dos, String location, Map<String,String> cookies) {
+            try {
+                dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
+                dos.writeBytes("LOCATION: " + location + "\r\n");
+                if(!cookies.isEmpty()){
+                    String setCookie = "SET-Cookie: ";
+                    for(String key : cookies.keySet()){
+                        setCookie+=(key+"="+cookies.get(key));
+                    }
+                    dos.writeBytes(setCookie + "\r\n");
+                }
+            } catch (IOException e) {
+                log.error(e.getMessage());
+            }
+        }
+* Map의 경우 모든 항목의 조회는 Map.keySet()을 활용하여 확인 할 수 있다.
+
+  - Map.keySet을 통해서 모든 맵의 KeySet을 추출한다. 
+    - (Map의 ID는 중복이 되면 안되기에, SET의 중복배제사상과 동일하다.)
+  - 추출된 식별자 Set은 Foreach()를 통해 참조할 MAP의 전체를 반복조회한다.
+
+        for(String key : cookies.keySet()){
+            setCookie+=(key+"="+cookies.get(key));
+        }
+                        
 
 ### 요구사항 6 - stylesheet 적용
 * 

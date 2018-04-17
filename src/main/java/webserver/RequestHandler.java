@@ -67,6 +67,11 @@ public class RequestHandler extends Thread {
             /*로그인요청 /user/login */
             if(uri.split("\\?")[0].equals(defaultPath+"/user/login")){
                 Map<String,String> map = null;
+
+                uri = "/user/login_failed.html";
+                Map cookies = new HashMap();
+                cookies.put("logined","false");
+
                 //get일 경우
                 if(method.equals("GET")){
                     uri = "/user/login.html";
@@ -76,28 +81,31 @@ public class RequestHandler extends Thread {
                     if(users.containsKey(map.get("userId"))){
                         String userId = map.get("userId");
                         String password = map.get("password");
-                        log.info("########1########{}",password);
-                        log.info("########2########{}",users.get(userId).getPassword());
-                        log.info("#########3########{}",users.get(userId).getPassword().equals(password));
+
                         //Login ID와 pw가 같다면 성공
                         if(users.get(userId).getPassword().equals(password)){
                             //Login Success
                             log.info("로그인 성공!");
+                            uri = "/user/list.html"; //완료후 LIST 페이지로
+                            cookies.remove ("logined");
+                            cookies.put("logend","true");
+                            response302Header(dos,uri,cookies);
+                            responseBody(dos,new byte[0]);
                         }else{
                             log.info("비밀번호를 확인해주세요.");
+                            uri = "/user/login_failed.html";
                         }
                     }else{ //ID가 없을 때..
                         log.info("존재하지 않는 ID 입니다. ID 입력을 확인해주세요.");
+                        uri = "/user/login_failed.html";
                     }
-
+                    response302Header(dos,uri);
+                    responseBody(dos,new byte[0]);
                 }
-                uri = "/user/list.html"; //완료후 LIST 페이지로
-                response302Header(dos,uri);
-                responseBody(dos,new byte[0]);
+
             }
 
             /*로그인요청끝 /user/login */
-
             byte[] body = Files.readAllBytes(new File(uri).toPath()); //NIO를 활용한 File to byte[]body
             response200Header(dos, body.length);
             responseBody(dos, body);
@@ -132,6 +140,22 @@ public class RequestHandler extends Thread {
         }
     }
 
+    private void response302Header(DataOutputStream dos, String location, Map<String,String> cookies) {
+        try {
+            dos.writeBytes("HTTP/1.1 302 FOUND \r\n");
+            dos.writeBytes("LOCATION: " + location + "\r\n");
+            if(!cookies.isEmpty()){
+                String setCookie = "SET-Cookie: ";
+                for(String key : cookies.keySet()){
+                    setCookie+=(key+"="+cookies.get(key));
+                }
+                dos.writeBytes(setCookie + "\r\n");
+            }
+        } catch (IOException e) {
+            log.error(e.getMessage());
+        }
+    }
+
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {
         try {
             dos.writeBytes("HTTP/1.1 200 OK \r\n");
@@ -142,22 +166,7 @@ public class RequestHandler extends Thread {
             log.error(e.getMessage());
         }
     }
-    private void response200Header(DataOutputStream dos, int lengthOfBodyContent, Map<String,String> cookies) {
-        try {
-            dos.writeBytes("HTTP/1.1 200 OK \r\n");
-            dos.writeBytes("Content-Type: text/html;charset=utf-8\r\n");
-            if(!cookies.isEmpty()){
-                String setCookie = "SET-Cookie: ";
 
-
-
-            }
-            dos.writeBytes("Content-Length: " + lengthOfBodyContent + "\r\n");
-            dos.writeBytes("\r\n");
-        } catch (IOException e) {
-            log.error(e.getMessage());
-        }
-    }
 
     private void responseBody(DataOutputStream dos, byte[] body) {
         try {
